@@ -1,0 +1,92 @@
+{
+    "name": "lacodix/laravel-metric-cards",
+    "description": "Get insights in your laravel applications key business values with metrics visualized as livewire cards.",
+    "type": "laravel-package",
+    "keywords": [
+        "lacodix",
+        "laravel",
+        "livewire",
+        "metric",
+        "cards",
+        "trend",
+        "charts",
+        "progress",
+        "doughnut",
+        "pie"
+    ],
+    "homepage": "https://github.com/lacodix/laravel-metric-cards",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dominik Müller",
+            "email": "dominik@lacodix.de",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-intl": "*",
+        "illuminate/contracts": "^9.0|^10.0",
+        "spatie/laravel-package-tools": "^1.13.0",
+        "livewire/livewire": "^2.12"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.13",
+        "illuminate/database": "^9.47|^10.0",
+        "illuminate/support": "^9.47|^10.0",
+        "laravel/pint": "^1.0",
+        "nunomaduro/collision": "^6.0",
+        "nunomaduro/larastan": "^2.0.1",
+        "nunomaduro/phpinsights": "^2.6",
+        "orchestra/testbench": "^7.19|^8.0",
+        "pestphp/pest": "^1.21",
+        "pestphp/pest-plugin-faker": "^1.0",
+        "pestphp/pest-plugin-laravel": "^1.1",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan-deprecation-rules": "^1.0",
+        "phpstan/phpstan-phpunit": "^1.0",
+        "phpunit/phpunit": "^9.5",
+        "rector/rector": "^0.15.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lacodix\\LaravelMetricCards\\": "src",
+            "Lacodix\\LaravelMetricCards\\Database\\Factories\\": "database/factories"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests",
+            "Tests\\Database\\Factories\\": "tests/database/factories"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint",
+        "csfixer:test": "php-cs-fixer fix -v",
+        "phpstan:test": "phpstan analyse --ansi",
+        "rector:test": "rector process --ansi",
+        "insights": "phpinsights analyse --ansi -v --no-interaction"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Lacodix\\LaravelMetricCards\\LaravelMetricCardsServiceProvider"
+            ]
+        },
+        "npm": {
+            "chart.js": "4.2.0"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
