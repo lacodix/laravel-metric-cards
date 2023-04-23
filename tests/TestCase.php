@@ -8,7 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
-use Lacodix\LaravelModelFilter\LaravelModelFilterServiceProvider;
+use Lacodix\LaravelMetricCards\LaravelMetricCardsServiceProvider;
 
 abstract class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -72,7 +72,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
     protected function getPackageProviders($app)
     {
         return [
-            LaravelModelFilterServiceProvider::class,
+            LaravelMetricCardsServiceProvider::class,
         ];
     }
 
