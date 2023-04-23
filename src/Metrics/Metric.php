@@ -20,6 +20,6 @@ abstract class Metric extends Component
 
     public function render(): View
     {
-        return view('livewire.metrics.' . $this->component);
+        return view(config('metric-cards.metrics_view_prefix') . $this->component);
     }
 }
