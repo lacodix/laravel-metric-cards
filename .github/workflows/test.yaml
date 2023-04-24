@@ -7,10 +7,11 @@ on:
       - master
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
+        os: [ubuntu-latest]
         php: [8.1, 8.2]
         laravel: [10.*, 9.*]
         dependency-version: [prefer-lowest, prefer-stable]
@@ -20,7 +21,8 @@ jobs:
           - laravel: 9.*
             testbench: 7.*
         composer-version: [ v2 ]
-    name: ${{ matrix.php }} - Composer ${{ matrix.composer-version }} --${{ matrix.dependency-version }}
+
+    name: ${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -36,8 +38,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          extensions: pdo
           coverage: xdebug
           tools: composer:${{ matrix.composer-version }}
+
+      - name: Create database
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -u root -pexample -e 'CREATE DATABASE IF NOT EXISTS testing-metrics;'
 
       - name: Install Composer dependencies
         run: |
