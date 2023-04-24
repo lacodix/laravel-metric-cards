@@ -45,7 +45,7 @@ jobs:
       - name: Create database
         run: |
           sudo /etc/init.d/mysql start
-          mysql -u root -proot -e 'CREATE DATABASE IF NOT EXISTS testing-metrics;'
+          mysql -u root -proot -e 'CREATE DATABASE IF NOT EXISTS `testing-metrics`;'
 
       - name: Install Composer dependencies
         run: |
