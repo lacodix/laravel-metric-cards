@@ -54,7 +54,7 @@ abstract class Pie extends Metric
 
         $this->values = array_values($values);
         $this->total = array_sum($this->values);
-        $this->percentages = array_map(fn($val) => round(100/$this->total*$val, 2), $this->values);
+        $this->percentages = array_map(fn ($val) => round(100/$this->total*$val, 2), $this->values);
 
         $this->labels = collect(array_keys($values))
             ->map(fn ($label, $key) => __($this->label(), [
