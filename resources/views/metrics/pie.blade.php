@@ -65,4 +65,4 @@
     >
         <canvas class="h-2/3" x-ref="canvas" wire:ignore></canvas>
     </div>
-    </ul>
+</div>
