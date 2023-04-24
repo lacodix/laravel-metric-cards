@@ -1,4 +1,4 @@
-<div class="bg-white dark:bg-gray-800 mb-8 rounded-md shadow-sm p-4 relative">
+<div class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 relative">
     <div class="flex justify-between mb-4">
         <div class="font-bold">{{ $this->title() }}</div>
         <div>
