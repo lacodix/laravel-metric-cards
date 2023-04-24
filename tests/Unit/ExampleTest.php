@@ -31,10 +31,18 @@ test('test the trend', function () {
         ->count(15)
         ->create();
 
+    Post::factory(['created_at' => now()->subDays(2)->subHour()])
+        ->count(7)
+        ->create();
+    Post::factory(['created_at' => now()->subDays(3)->subHour()])
+        ->count(4)
+        ->create();
+    Post::factory(['created_at' => now()->subDays(4)->subHour()])
+        ->count(2)
+        ->create();
+
     $component = Livewire::test(PostsPerDay::class)
         ->set('period', '5');
 
-    expect($component->get('previousValue'))->toEqual(15)
-        ->and($component->get('currentValue'))->toEqual(5)
-        ->and($component->get('changePercentage'))->toEqual(-66.67);
+    expect(array_values($component->get('values')))->toEqual([2, 4, 7, 15, 5]);
 });
