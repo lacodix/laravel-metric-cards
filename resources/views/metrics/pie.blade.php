@@ -1,23 +1,25 @@
 <div class="bg-white dark:bg-gray-800 mb-8 rounded-md shadow-sm p-4 relative">
     <div class="flex justify-between mb-4">
         <div class="font-bold">{{ $this->title() }}</div>
-        <div>
-            <select wire:model="period" class="rounded-none py-1 px-2 text-sm">
-                @foreach($this->options() as $key => $option)
-                    <option value="{{ $key }}">{{ $option }}</option>
-                @endforeach
-            </select>
-        </div>
+        <div>{{ $total }}</div>
     </div>
 
+    <ul>
+        @foreach($values as $value)
+            <li>
+                {{ $value }}
+            </li>
+        @endforeach
+    </ul>
+
     <div
-        class="overflow-hidden absolute w-full bottom-0 left-0 h-1/2"
+        class="overflow-hidden absolute bottom-0 right-0 h-2/3 w-1/3"
         x-data="{
             labels: @entangle('labels'),
             values: @entangle('values'),
             init() {
               let chart = new Chart(this.$refs.canvas.getContext('2d'), {
-                type: 'line',
+                type: 'pie',
                 data: {
                   labels: this.labels,
                   datasets: [
@@ -27,6 +29,7 @@
                   ],
                 },
                 options: {
+                  cutout: {{ $doughnut ? '"50%"': '0' }},
                   maintainAspectRatio: false,
                   plugins: {
                     legend: {
@@ -53,6 +56,6 @@
             }
         }"
     >
-        <canvas class="h-1/2" x-ref="canvas" wire:ignore></canvas>
+        <canvas class="h-2/3" x-ref="canvas" wire:ignore></canvas>
     </div>
-</div>
+</ul>
