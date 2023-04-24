@@ -22,7 +22,7 @@ jobs:
             testbench: 7.*
         composer-version: [ v2 ]
 
-    name: ${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
+    name: PHP${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -55,4 +55,9 @@ jobs:
       - name: Unit Tests
         run: composer test
         env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_USERNAME: root
           DB_PASSWORD: root
+          DB_DATABASE: testing-metrics
+
