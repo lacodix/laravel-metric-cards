@@ -11,9 +11,9 @@ abstract class Pie extends Metric
 
     /** @var array<int,string>  */
     public array $colors = [
-        '#FF6D60',
         '#009FBD',
         '#F7D060',
+        '#FF6D60',
         '#98D8AA',
         '#77037B',
         '#210062',
@@ -54,7 +54,7 @@ abstract class Pie extends Metric
 
         $this->values = array_values($values);
         $this->total = array_sum($this->values);
-        $this->percentages = array_map(fn ($val) => round(100/$this->total*$val, 2), $this->values);
+        $this->percentages = array_map(fn($val) => round(100/$this->total*$val, 2), $this->values);
 
         $this->labels = collect(array_keys($values))
             ->map(fn ($label, $key) => __($this->label(), [
