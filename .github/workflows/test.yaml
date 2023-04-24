@@ -54,4 +54,5 @@ jobs:
 
       - name: Unit Tests
         run: composer test
-
+        env:
+          DB_PASSWORD: root
