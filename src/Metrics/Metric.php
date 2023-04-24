@@ -13,9 +13,14 @@ abstract class Metric extends Component
 
     public function title(): string
     {
-        $this->title ??= ucwords(str_replace('_', ' ', Str::snake(class_basename($this))));
+        $this->title ??= ucwords(str_replace('_', ' ', $this->name()));
 
         return $this->title;
+    }
+
+    public function name(): string
+    {
+        return Str::snake(class_basename($this));
     }
 
     public function render(): View

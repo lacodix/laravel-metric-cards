@@ -1,4 +1,4 @@
-<div class="bg-white dark:bg-gray-800 mb-8 rounded-md shadow-sm p-4">
+<div class="bg-white dark:bg-gray-800 mb-8 rounded-md shadow-sm p-4 relative">
     <div class="flex justify-between mb-4">
         <div class="font-bold">{{ $this->title() }}</div>
         <div>
@@ -10,10 +10,51 @@
         </div>
     </div>
 
-    <div class="overflow-hidden">
-        <canvas
-            data-te-chart="line"
-            data-te-dataset-data="[{{ join(',', $this->values) }}]">
-        </canvas>
+    <div
+        class="overflow-hidden absolute w-full bottom-0 left-0 h-1/2"
+        x-data="{
+            labels: @entangle('labels'),
+            values: @entangle('values'),
+            init() {
+              let chart = new Chart(this.$refs.canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                  labels: this.labels,
+                  datasets: [
+                    {
+                      data: this.values,
+                    },
+                  ],
+                },
+                options: {
+                  backgroundColor: 'blue',
+                  borderColor: 'blue',
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    }
+                  },
+                  scales: {
+                    x: {
+                      display: false,
+
+                    },
+                    y: {
+                      display: false,
+                    }
+                  }
+                }
+              })
+
+              this.$watch('values', () => {
+                chart.data.labels = this.labels
+                chart.data.datasets[0].data = this.values
+                chart.update()
+              })
+            }
+        }"
+    >
+        <canvas class="h-1/2" x-ref="canvas" wire:ignore></canvas>
     </div>
 </div>
