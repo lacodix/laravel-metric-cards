@@ -12,8 +12,10 @@ abstract class Trend extends Metric
 {
     protected string $component = 'trend';
     public int $previousValue;
-    /** @var array<string,int> $values */
+    /** @var array<int> $values */
     public array $values;
+    /** @var array<string> $labels */
+    public array $labels;
     public int $period;
 
     /** @return array<int|float> */
@@ -69,7 +71,10 @@ abstract class Trend extends Metric
 
     protected function calculate()
     {
-        $this->values = $this->value();
+        $values = $this->value();
+
+        $this->labels = array_keys($values);
+        $this->values = array_values($values);
     }
 
     protected function getStartingDate(TrendUnit $unit): Carbon
