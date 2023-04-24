@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
 use Lacodix\LaravelMetricCards\LaravelMetricCardsServiceProvider;
+use Livewire\LivewireServiceProvider;
 
 abstract class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -22,31 +23,20 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
         $capsule = new Capsule;
 
         $capsule->addConnection([
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'username' => 'root',
-            'password' => '',
+            'driver' => 'mysql',
+            'host' => env('DB_HOST'),
+            'database' => env('DB_DATABASE'),
+            'username' => env('DB_USERNAME'),
+            'password' => env('DB_PASSWORD'),
         ]);
 
         $capsule->setAsGlobal();
         $capsule->bootEloquent();
 
+        Capsule::schema()->dropIfExists('posts');
         Capsule::schema()->create('posts', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('type');
-            $table->boolean('published');
-            $table->text('content');
-            $table->integer('counter');
-            $table->timestamps();
-        });
-
-        Capsule::schema()->create('comments', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->boolean('published');
-            $table->text('content');
-            $table->integer('counter');
             $table->timestamps();
         });
 
@@ -61,6 +51,8 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
                 Str::afterLast($factory::class, '\\')
             )
         );
+
+
     }
 
     /**
@@ -72,6 +64,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
     protected function getPackageProviders($app)
     {
         return [
+            LivewireServiceProvider::class,
             LaravelMetricCardsServiceProvider::class,
         ];
     }

@@ -44,6 +44,26 @@ abstract class Value extends Metric
         return $this->run('count', $model, $column, $dateColumn);
     }
 
+    protected function max(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', $model, $column, $dateColumn);
+    }
+
+    protected function min(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', $model, $column, $dateColumn);
+    }
+
+    protected function avg(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', $model, $column, $dateColumn);
+    }
+
+    protected function sum(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', $model, $column, $dateColumn);
+    }
+
     protected function run(string $function, string|Builder $model, ?string $column, ?string $dateColumn): array
     {
         $query = $model instanceof Builder ? $model : (new $model)->newQuery();
