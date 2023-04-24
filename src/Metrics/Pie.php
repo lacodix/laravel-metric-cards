@@ -2,11 +2,7 @@
 
 namespace Lacodix\LaravelMetricCards\Metrics;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Lacodix\LaravelMetricCards\Enums\TrendUnit;
 
 abstract class Pie extends Metric
 {
