@@ -1,7 +1,10 @@
-<div class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 relative">
+<div
+    class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 relative"
+    data-metric-name="{{ $this->name() }}"
+>
     <div class="flex justify-between mb-4">
-        <div class="font-bold">{{ $this->title() }}</div>
-        <div class="text-xs text-gray-600">{{ $this->total() }}</div>
+        <div class="font-bold">{!! $this->title() !!}</div>
+        <div class="text-xs text-gray-600">{!! $this->total() !!}</div>
     </div>
 
     <ul>

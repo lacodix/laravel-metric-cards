@@ -1,4 +1,7 @@
-<div class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 flex flex-col justify-between">
+<div
+    class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 flex flex-col justify-between"
+    data-metric-name="{{ $this->name() }}"
+>
     <div class="flex justify-between mb-4">
         <div class="font-bold">{{ $this->title() }}</div>
         <div>
