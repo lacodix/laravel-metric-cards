@@ -178,7 +178,7 @@ abstract class Trend extends Metric
             return null;
         }
 
-        [$function, $unit] = explode('By', $method);
+        [$function, $unit] = explode('By', (string) $method);
 
         if (! in_array(strtolower($function), ['count', 'sum', 'min', 'max', 'avg'])
             || ! in_array(strtolower($unit), ['days', 'weeks', 'months', 'quarters', 'hours', 'minutes'])) {
