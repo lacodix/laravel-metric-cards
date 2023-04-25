@@ -195,7 +195,9 @@ abstract class Trend extends Metric
     protected function methodNotFound(string $method): never
     {
         throw new BadMethodCallException(sprintf(
-            'Call to undefined method %s::%s()', static::class, $method
+            'Call to undefined method %s::%s()',
+            static::class,
+            $method
         ));
     }
 }
