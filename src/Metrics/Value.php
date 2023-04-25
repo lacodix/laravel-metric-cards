@@ -8,7 +8,7 @@ use Illuminate\View\View;
 abstract class Value extends Metric
 {
     protected string $component = 'value';
-    public int $previousValue;
+    public ?int $previousValue = null;
     public int $currentValue;
     public int $period;
     public ?float $changePercentage = null;
@@ -25,6 +25,11 @@ abstract class Value extends Metric
             60 => '60 days',
             365 => '365 days',
         ];
+    }
+
+    public function link(): ?string
+    {
+        return null;
     }
 
     public function mount(): void
@@ -99,14 +104,18 @@ abstract class Value extends Metric
 
     protected function calculate()
     {
-        [$this->previousValue, $this->currentValue] = $this->value();
+        $values = $this->value();
+        $this->currentValue = $values[1] ?? $values[0];
+        $this->previousValue = isset($values[1]) ? $values[0] : null;
 
-        $diff = $this->currentValue - $this->previousValue;
-        $divisor = $this->previousValue;
-        $this->changePercentage = match (true) {
-            $diff === 0 => 0,
-            $divisor === 0 => null,
-            default => round(100 / $divisor * $diff, 2),
-        };
+        if (! is_null($this->previousValue)) {
+            $diff = $this->currentValue - $this->previousValue;
+            $divisor = $this->previousValue;
+            $this->changePercentage = match (true) {
+                $diff === 0 => 0,
+                $divisor === 0 => null,
+                default => round(100 / $divisor * $diff, 2),
+            };
+        }
     }
 }
