@@ -2,12 +2,46 @@
 
 namespace Lacodix\LaravelMetricCards\Metrics;
 
+use BadMethodCallException;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Lacodix\LaravelMetricCards\Enums\TrendUnit;
 
+/**
+ * @method countByMinutes(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method countByHours(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method countByDays(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method countByWeeks(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method countByMonths(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method countByQuarters(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method sumByMinutes(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method sumByHours(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method sumByDays(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method sumByWeeks(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method sumByMonths(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method sumByQuarters(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method minByMinutes(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method minByHours(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method minByDays(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method minByWeeks(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method minByMonths(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method minByQuarters(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method maxByMinutes(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method maxByHours(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method maxByDays(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method maxByWeeks(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method maxByMonths(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method maxByQuarters(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method avgByMinutes(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method avgByHours(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method avgByDays(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method avgByWeeks(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method avgByMonths(string $class, ?string $column = null, ?string $dateColumn = null)
+ * @method avgByQuarters(string $class, ?string $column = null, ?string $dateColumn = null)
+ */
 abstract class Trend extends Metric
 {
     protected string $component = 'trend';
@@ -43,13 +77,13 @@ abstract class Trend extends Metric
         return parent::render();
     }
 
-    protected function countByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
-    {
-        return $this->run('count', TrendUnit::DAY, $model, $column, $dateColumn);
-    }
-
-    protected function run(string $function, TrendUnit $unit, string|Builder $model, ?string $column, ?string $dateColumn): array
-    {
+    protected function run(
+        string $function,
+        TrendUnit $unit,
+        string|Builder $model,
+        ?string $column = null,
+        ?string $dateColumn = null
+    ): array {
         $query = $model instanceof Builder ? $model : (new $model)->newQuery();
         $column ??= $query->getModel()->getQualifiedKeyName();
         $dateColumn ??= $query->getModel()->getCreatedAtColumn();
@@ -136,5 +170,32 @@ abstract class Trend extends Metric
             TrendUnit::HOUR => $date->format('Y-m-d H:00'),
             TrendUnit::MINUTE => $date->format('Y-m-d H:i:00'),
         };
+    }
+
+    public function __call($method, $params): mixed
+    {
+        if (! Str::contains($method, 'By')) {
+            return null;
+        }
+
+        [$function, $unit] = explode('By', $method);
+
+        if (! in_array(strtolower($function), ['count', 'sum', 'min', 'max', 'avg'])
+            || ! in_array(strtolower($unit), ['days', 'weeks', 'months', 'quarters', 'hours', 'minutes'])) {
+            return null;
+        }
+
+        return $this->run(
+            strtolower($function),
+            TrendUnit::from(Str::singular(strtolower($unit))),
+            ...$params
+        );
+    }
+
+    protected function methodNotFound(string $method): never
+    {
+        throw new BadMethodCallException(sprintf(
+            'Call to undefined method %s::%s()', static::class, $method
+        ));
     }
 }

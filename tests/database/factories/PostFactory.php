@@ -17,6 +17,7 @@ class PostFactory extends Factory
         return [
             'title' => $this->faker->words(random_int(5, 15), true),
             'created_at' => $this->faker->dateTimeBetween('-1 year'),
+            'words' => rand(10, 100),
         ];
     }
 }

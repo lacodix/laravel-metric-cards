@@ -37,6 +37,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
         Capsule::schema()->create('posts', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->integer('words');
             $table->timestamps();
         });
 
