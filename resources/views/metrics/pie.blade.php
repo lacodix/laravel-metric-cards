@@ -66,6 +66,6 @@
             }
         }"
     >
-        <canvas class="h-2/3" x-ref="canvas" wire:ignore></canvas>
+        <canvas class="h-full w-full" x-ref="canvas" wire:ignore></canvas>
     </div>
 </div>
