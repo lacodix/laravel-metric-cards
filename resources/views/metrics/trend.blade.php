@@ -5,7 +5,7 @@
     <div class="flex justify-between mb-4">
         <div class="font-bold">{{ $this->title() }}</div>
         <div>
-            <select wire:model="period" class="rounded-none py-1 px-2 text-sm">
+            <select wire:model.live="period" class="rounded-none py-1 px-2 text-sm">
                 @foreach($this->options() as $key => $option)
                     <option value="{{ $key }}">{{ $option }}</option>
                 @endforeach
@@ -16,8 +16,8 @@
     <div
         class="overflow-hidden absolute w-full bottom-0 left-0 h-1/2"
         x-data="{
-            labels: @entangle('labels'),
-            values: @entangle('values'),
+            labels: @entangle('labels').live,
+            values: @entangle('values').live,
             init() {
               let chart = new Chart(this.$refs.canvas.getContext('2d'), {
                 type: 'line',
