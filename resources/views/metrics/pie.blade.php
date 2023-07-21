@@ -19,9 +19,9 @@
     <div
         class="overflow-hidden absolute bottom-0 right-0 p-2 h-2/3 w-1/3"
         x-data="{
-            labels: @entangle('labels'),
-            values: @entangle('values'),
-            colors: @entangle('colors'),
+            labels: @entangle('labels').live,
+            values: @entangle('values').live,
+            colors: @entangle('colors').live,
             init() {
               let chart = new Chart(this.$refs.canvas.getContext('2d'), {
                 type: 'pie',
@@ -66,6 +66,6 @@
             }
         }"
     >
-        <canvas class="h-2/3" x-ref="canvas" wire:ignore></canvas>
+        <canvas class="h-full w-full" x-ref="canvas" wire:ignore></canvas>
     </div>
 </div>

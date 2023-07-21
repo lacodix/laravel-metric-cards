@@ -14,7 +14,7 @@ data-metric-name="{{ $this->name() }}"
     <div class="font-bold">{{ $this->title() }}</div>
     @unless(empty($this->options()))
         <div>
-            <select wire:model="period" class="rounded-none py-1 px-2 text-sm">
+            <select wire:model.live="period" class="rounded-none py-1 px-2 text-sm">
                 @foreach($this->options() as $key => $option)
                     <option value="{{ $key }}">{{ $option }}</option>
                 @endforeach
