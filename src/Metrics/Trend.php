@@ -44,13 +44,33 @@ use Lacodix\LaravelMetricCards\Enums\TrendUnit;
  */
 abstract class Trend extends Metric
 {
-    protected string $component = 'trend';
     public int $previousValue;
     /** @var array<int> $values */
     public array $values;
     /** @var array<string> $labels */
     public array $labels;
     public int $period;
+    protected string $component = 'trend';
+
+    public function __call($method, $params): mixed
+    {
+        if (! Str::contains($method, 'By')) {
+            return null;
+        }
+
+        [$function, $unit] = explode('By', (string) $method);
+
+        if (! in_array(strtolower($function), ['count', 'sum', 'min', 'max', 'avg'])
+            || ! in_array(strtolower($unit), ['days', 'weeks', 'months', 'quarters', 'hours', 'minutes'])) {
+            return null;
+        }
+
+        return $this->run(
+            strtolower($function),
+            TrendUnit::from(Str::singular(strtolower($unit))),
+            ...$params
+        );
+    }
 
     /** @return array<int|float> */
     abstract public function value(): array;
@@ -84,12 +104,12 @@ abstract class Trend extends Metric
         ?string $column = null,
         ?string $dateColumn = null
     ): array {
-        $query = $model instanceof Builder ? $model : (new $model)->newQuery();
+        $query = $model instanceof Builder ? $model : (new $model())->newQuery();
         $column ??= $query->getModel()->getQualifiedKeyName();
         $dateColumn ??= $query->getModel()->getCreatedAtColumn();
         $startingDate = $this->getStartingDate($unit);
 
-        $groupBy = $this->getGroupBy($query, $unit, $dateColumn);
+        $groupBy = $this->getGroupBy($unit, $dateColumn);
 
         $results = $query
             ->select(DB::raw("{$groupBy} as period, {$function}({$column}) as aggregate"))
@@ -103,7 +123,7 @@ abstract class Trend extends Metric
         return array_merge(array_fill_keys($periods, 0), $results->all());
     }
 
-    protected function calculate()
+    protected function calculate(): void
     {
         $values = $this->value();
 
@@ -123,7 +143,7 @@ abstract class Trend extends Metric
         };
     }
 
-    protected function getGroupBy(Builder $query, TrendUnit $unit, $column): string
+    protected function getGroupBy(TrendUnit $unit, $column): string
     {
         return match ($unit) {
             TrendUnit::QUARTER => "concat(year({$column}),'-',ceil(month({$column})/3))",
@@ -163,33 +183,13 @@ abstract class Trend extends Metric
     protected function formatForPeriod(Carbon $date, TrendUnit $unit): string
     {
         return match ($unit) {
-            TrendUnit::QUARTER => $date->year . '-' . (int) ceil($date->month/3),
+            TrendUnit::QUARTER => $date->year . '-' . (int) ceil($date->month / 3),
             TrendUnit::MONTH => $date->format('Y-m'),
             TrendUnit::WEEK => $date->format('o-W'),
             TrendUnit::DAY => $date->format('Y-m-d'),
             TrendUnit::HOUR => $date->format('Y-m-d H:00'),
             TrendUnit::MINUTE => $date->format('Y-m-d H:i:00'),
         };
-    }
-
-    public function __call($method, $params): mixed
-    {
-        if (! Str::contains($method, 'By')) {
-            return null;
-        }
-
-        [$function, $unit] = explode('By', (string) $method);
-
-        if (! in_array(strtolower($function), ['count', 'sum', 'min', 'max', 'avg'])
-            || ! in_array(strtolower($unit), ['days', 'weeks', 'months', 'quarters', 'hours', 'minutes'])) {
-            return null;
-        }
-
-        return $this->run(
-            strtolower($function),
-            TrendUnit::from(Str::singular(strtolower($unit))),
-            ...$params
-        );
     }
 
     protected function methodNotFound(string $method): never

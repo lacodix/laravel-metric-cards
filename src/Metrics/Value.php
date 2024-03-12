@@ -7,11 +7,11 @@ use Illuminate\View\View;
 
 abstract class Value extends Metric
 {
-    protected string $component = 'value';
     public ?int $previousValue = null;
     public int $currentValue;
     public int $period;
     public ?float $changePercentage = null;
+    protected string $component = 'value';
 
     /** @return array<int|float> */
     abstract public function value(): array;
@@ -71,7 +71,7 @@ abstract class Value extends Metric
 
     protected function run(string $function, string|Builder $model, ?string $column, ?string $dateColumn): array
     {
-        $query = $model instanceof Builder ? $model : (new $model)->newQuery();
+        $query = $model instanceof Builder ? $model : (new $model())->newQuery();
         $column ??= $query->getModel()->getQualifiedKeyName();
 
         return [
@@ -102,7 +102,7 @@ abstract class Value extends Metric
         ];
     }
 
-    protected function calculate()
+    protected function calculate(): void
     {
         $values = $this->value();
         $this->currentValue = $values[1] ?? $values[0];
