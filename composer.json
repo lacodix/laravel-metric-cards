@@ -32,7 +32,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.13",
-        "illuminate/database": "^9.47|^10.0",
+        "illuminate/database": "^9.47|^10.0|^11.0",
         "illuminate/support": "^9.47|^10.0|^11.0",
         "laravel/pint": "^1.0",
         "nunomaduro/collision": "^7.0|^8.0",
