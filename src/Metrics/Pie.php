@@ -6,7 +6,6 @@ use Illuminate\View\View;
 
 abstract class Pie extends Metric
 {
-    protected string $component = 'pie';
     public bool $doughnut = false;
 
     /** @var array<int,string>  */
@@ -27,6 +26,7 @@ abstract class Pie extends Metric
     public array $labels;
     /** @var array<float> $percentages */
     public array $percentages;
+    protected string $component = 'pie';
 
     /** @return array<int|float> */
     abstract public function value(): array;
@@ -48,14 +48,14 @@ abstract class Pie extends Metric
         return parent::render();
     }
 
-    protected function calculate()
+    protected function calculate(): void
     {
         $values = $this->value();
 
         $this->values = array_values($values);
         $this->total = array_sum($this->values);
         $this->percentages = array_map(
-            fn ($val) => $this->total === 0 ? 0 : round(100/$this->total*$val, 2),
+            fn ($val) => $this->total === 0 ? 0 : round(100 / $this->total * $val, 2),
             $this->values
         );
 

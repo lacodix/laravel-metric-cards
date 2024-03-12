@@ -76,6 +76,8 @@ return [
         ForbiddenNormalClasses::class,
         ForbiddenTraits::class,
         LineLengthSniff::class,
+        SlevomatCodingStandard\Sniffs\Classes\ForbiddenPublicPropertySniff::class,
+
     ],
 
     'config' => [
