@@ -143,15 +143,34 @@ abstract class Trend extends Metric
         };
     }
 
-    protected function getGroupBy(TrendUnit $unit, $column): string
+    protected function getGroupBy(TrendUnit $unit, string $column): string
     {
+        $driver = DB::connection()->getDriverName();
+
+        // MySQL: use DATE_FORMAT() and year()/month()/ceil()
+        if ($driver === 'mysql') {
+            return match ($unit) {
+                TrendUnit::QUARTER => "concat(year({$column}),'-',ceil(month({$column})/3))",
+                TrendUnit::MONTH => "date_format({$column}, '%Y-%m')",
+                TrendUnit::WEEK => "date_format({$column}, '%x-%v')",
+                TrendUnit::DAY => "date_format({$column}, '%Y-%m-%d')",
+                TrendUnit::HOUR => "date_format({$column}, '%Y-%m-%d %H:00')",
+                TrendUnit::MINUTE => "date_format({$column}, '%Y-%m-%d %H:%i:00')",
+            };
+        }
+
+        // SQLite (and any others): use strftime()
+        // Note: SQLite’s strftime always returns TEXT, so we wrap the quarter in a CAST back to integer.
         return match ($unit) {
-            TrendUnit::QUARTER => "concat(year({$column}),'-',ceil(month({$column})/3))",
-            TrendUnit::MONTH => "date_format({$column}, '%Y-%m')",
-            TrendUnit::WEEK => "date_format({$column}, '%x-%v')",
-            TrendUnit::DAY => "date_format({$column}, '%Y-%m-%d')",
-            TrendUnit::HOUR => "date_format({$column}, '%Y-%m-%d %H:00')",
-            TrendUnit::MINUTE => "date_format({$column}, '%Y-%m-%d %H:%i:00')",
+            TrendUnit::QUARTER =>
+                // year || '-' || quarter
+                "strftime('%Y', {$column}) || '-' || " .
+                "cast((cast(strftime('%m', {$column}) as integer) + 2) / 3 as integer)",
+            TrendUnit::MONTH => "strftime('%Y-%m', {$column})",
+            TrendUnit::WEEK => "strftime('%Y-%W', {$column})",
+            TrendUnit::DAY => "strftime('%Y-%m-%d', {$column})",
+            TrendUnit::HOUR => "strftime('%Y-%m-%d %H:00', {$column})",
+            TrendUnit::MINUTE => "strftime('%Y-%m-%d %H:%M:00', {$column})",
         };
     }
 
