@@ -162,15 +162,30 @@ abstract class Trend extends Metric
         // SQLite (and any others): use strftime()
         // Note: SQLite’s strftime always returns TEXT, so we wrap the quarter in a CAST back to integer.
         return match ($unit) {
+            // yyyy-q
             TrendUnit::QUARTER =>
-                // year || '-' || quarter
-                "strftime('%Y', {$column}) || '-' || " .
-                "cast((cast(strftime('%m', {$column}) as integer) + 2) / 3 as integer)",
-            TrendUnit::MONTH => "strftime('%Y-%m', {$column})",
-            TrendUnit::WEEK => "strftime('%Y-%W', {$column})",
-            TrendUnit::DAY => "strftime('%Y-%m-%d', {$column})",
-            TrendUnit::HOUR => "strftime('%Y-%m-%d %H:00', {$column})",
-            TrendUnit::MINUTE => "strftime('%Y-%m-%d %H:%M:00', {$column})",
+                "strftime('%Y', {$column})"
+                . " || '-' || "
+                . "cast((cast(strftime('%m', {$column}) as integer) + 2) / 3 as integer)",
+
+            // yyyy-mm
+            TrendUnit::MONTH   => "strftime('%Y-%m', {$column})",
+
+            // ISO week-year and week number, Monday-first
+            //  SQLite's %W is Monday-first but zero-based, so we +1, and %Y is safe
+            TrendUnit::WEEK    =>
+                "strftime('%Y', {$column})"
+                . " || '-' || "
+                . "cast(cast(strftime('%W', {$column}) as integer) + 1 as text)",
+
+            // yyyy-mm-dd
+            TrendUnit::DAY     => "strftime('%Y-%m-%d', {$column})",
+
+            // hour bucket: yyyy-mm-dd hh:00
+            TrendUnit::HOUR    => "strftime('%Y-%m-%d %H:00', {$column})",
+
+            // minute bucket: yyyy-mm-dd hh:ii:00
+            TrendUnit::MINUTE  => "strftime('%Y-%m-%d %H:%M:00', {$column})",
         };
     }
 
