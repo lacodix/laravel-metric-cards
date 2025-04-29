@@ -59,16 +59,16 @@ test('trend metric calculates correct values for month', function () {
     Post::factory(['created_at' => now()])
         ->count(1)
         ->create();
-    Post::factory(['created_at' => now()->subMonth()])
+    Post::factory(['created_at' => now()->subMonthWithoutOverflow()])
         ->count(2)
         ->create();
-    Post::factory(['created_at' => now()->subMonths(2)])
+    Post::factory(['created_at' => now()->subMonthsWithoutOverflow(2)])
         ->count(3)
         ->create();
-    Post::factory(['created_at' => now()->subMonths(3)])
+    Post::factory(['created_at' => now()->subMonthsWithoutOverflow(3)])
         ->count(4)
         ->create();
-    Post::factory(['created_at' => now()->subMonths(4)])
+    Post::factory(['created_at' => now()->subMonthsWithoutOverflow(4)])
         ->count(5)
         ->create();
 
@@ -82,16 +82,16 @@ test('trend metric calculates correct values for quarter', function () {
     Post::factory(['created_at' => now()])
         ->count(5)
         ->create();
-    Post::factory(['created_at' => now()->subQuarter()])
+    Post::factory(['created_at' => now()->subQuarterWithoutOverflow()])
         ->count(4)
         ->create();
-    Post::factory(['created_at' => now()->subQuarters(2)])
+    Post::factory(['created_at' => now()->subQuartersWithoutOverflow(2)])
         ->count(3)
         ->create();
-    Post::factory(['created_at' => now()->subQuarters(3)])
+    Post::factory(['created_at' => now()->subQuartersWithoutOverflow(3)])
         ->count(2)
         ->create();
-    Post::factory(['created_at' => now()->subQuarters(4)])
+    Post::factory(['created_at' => now()->subQuartersWithoutOverflow(4)])
         ->count(1)
         ->create();
 
