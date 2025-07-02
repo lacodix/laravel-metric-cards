@@ -2,7 +2,6 @@
 
 namespace Lacodix\LaravelMetricCards\Metrics;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
