@@ -2,12 +2,15 @@
 
 namespace Lacodix\LaravelMetricCards\Metrics;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
 
 abstract class Metric extends Component
 {
+    public bool $flat = false;
+
     protected string $component;
     protected string $title;
 
@@ -27,4 +30,5 @@ abstract class Metric extends Component
     {
         return view(config('metric-cards.metrics_view_prefix') . $this->component);
     }
+
 }

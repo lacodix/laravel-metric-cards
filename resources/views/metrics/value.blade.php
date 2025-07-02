@@ -3,14 +3,17 @@
     $link = $this->link();
 @endphp
 <{{ $tag }}
-    class="block bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 flex flex-col justify-between
-@if ($link) hover:no-underline hover:bg-gray-100 @endif"
-data-metric-name="{{ $this->name() }}"
-@if ($link)
-    href="{{ $link }}"
-@endif
+    class="block bg-white dark:bg-gray-800 flex flex-col justify-between
+    @if (!$this->flat)
+        rounded-md shadow-sm p-4
+    @endif
+    @if ($link) hover:no-underline hover:bg-gray-100 @endif"
+    data-metric-name="{{ $this->name() }}"
+    @if ($link)
+        href="{{ $link }}"
+    @endif
 >
-<div class="flex justify-between mb-4">
+<div class="flex flex-col @md:flex-row justify-between mb-4">
     <div class="font-bold">{{ $this->title() }}</div>
     @unless(empty($this->options()))
         <div>
@@ -23,7 +26,7 @@ data-metric-name="{{ $this->name() }}"
     @endunless
 </div>
 
-<div class="flex items-end justify-between">
+<div class="flex flex-col @md:flex-row @md:items-end justify-between">
     @unless(is_null($previousValue))
         <div class="flex">
             @if (! is_null($changePercentage) && $changePercentage < 0)

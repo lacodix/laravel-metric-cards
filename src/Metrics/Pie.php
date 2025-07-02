@@ -8,6 +8,8 @@ abstract class Pie extends Metric
 {
     public bool $doughnut = false;
 
+    public array $invisibleValues = [];
+    
     /** @var array<int,string>  */
     public array $colors = [
         '#009FBD',

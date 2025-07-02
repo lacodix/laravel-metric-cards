@@ -1,8 +1,12 @@
 <div
-    class="bg-white dark:bg-gray-800 rounded-md shadow-sm p-4 relative"
+    class="bg-white dark:bg-gray-800 relative @container
+    @if (!$this->flat)
+    rounded-md shadow-sm p-4
+    @endif
+    "
     data-metric-name="{{ $this->name() }}"
 >
-    <div class="flex justify-between mb-4">
+    <div class="flex flex-col @md:flex-row justify-between mb-4">
         <div class="font-bold">{{ $this->title() }}</div>
         <div>
             <select wire:model.live="period" class="rounded-none py-1 px-2 text-sm">
