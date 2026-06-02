@@ -19,7 +19,7 @@
             colors: @entangle('colors').live,
             invisible: @entangle('invisibleValues').live,
             init() {
-                let chart = new Chart(this.$refs.canvas.getContext('2d'), {
+                const chart = new Chart(this.$refs.canvas.getContext('2d'), {
                     type: 'pie',
                     data: {
                       labels: this.labels.slice(),
@@ -63,7 +63,7 @@
                     chart.update()
                   })
 
-                  checkInvisible = function(invisible) {
+                  function checkInvisible(invisible) {
                     // for a single‐dataset pie, datasetIndex is always 0
                     const dsMeta = chart.getDatasetMeta(0);
 
