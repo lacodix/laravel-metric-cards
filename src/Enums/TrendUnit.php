@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Lacodix\LaravelMetricCards\Enums;
 
 enum TrendUnit: string
