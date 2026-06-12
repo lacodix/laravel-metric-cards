@@ -1,0 +1,14 @@
+{
+    "name": "laravel-metric-cards",
+    "private": true,
+    "description": "Standalone Chart.js bundle shipped with lacodix/laravel-metric-cards.",
+    "scripts": {
+        "build": "esbuild resources/js/metrics.js --bundle --minify --format=iife --target=es2019 --outfile=dist/metrics.js"
+    },
+    "devDependencies": {
+        "esbuild": "^0.24.0"
+    },
+    "dependencies": {
+        "chart.js": "^4.2.0"
+    }
+}
