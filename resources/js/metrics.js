@@ -19,7 +19,53 @@
 import Chart from 'chart.js/auto'
 import { Colors } from 'chart.js'
 
-const BRAND_COLOR = '#6c5cff'
+const DEFAULT_BACKGROUND_COLOR = '#6c5cff'
+const DEFAULT_BORDER_COLOR = '#6c5cff'
+const DEFAULT_FONT_COLOR = '#666'
+
+/**
+ * Read the chart configuration provided by the host application through the
+ * `_assets.blade.php` view (Laravel config) or set manually before the bundle
+ * is loaded.
+ *
+ * @returns {object}
+ */
+function getChartConfig() {
+  return (window.LaravelMetrics && window.LaravelMetrics.config && window.LaravelMetrics.config.chart) || {}
+}
+
+/**
+ * Clone an (possibly reactive Alpine/Livewire proxy) array into a plain array.
+ *
+ * Passing reactive proxy arrays/objects straight into Chart.js can make its
+ * options/data resolver recurse indefinitely ("RangeError: Maximum call stack
+ * size exceeded"). Every value handed to `new Chart(...)` / `chart.update()`
+ * must therefore be a plain, non-reactive array/object.
+ *
+ * @param {*} value
+ * @returns {Array}
+ */
+function plainArray(value) {
+  return Array.isArray(value) ? Array.from(value) : []
+}
+
+/**
+ * Build a deterministic list of `count` colors from the configured package
+ * palette (`dataset_colors`). Returns an empty array when no palette is
+ * configured so callers can fall back to Chart.js defaults / the Colors plugin.
+ *
+ * @param {number} count
+ * @returns {string[]}
+ */
+function getDatasetColors(count) {
+  const colors = getChartConfig().datasetColors || []
+
+  if (!Array.isArray(colors) || colors.length === 0) {
+    return []
+  }
+
+  return Array.from({ length: count }, (_, index) => colors[index % colors.length])
+}
 
 /**
  * Prepare the bundled Chart.js constructor (apply defaults, register plugins)
@@ -34,8 +80,19 @@ function prepareChart() {
     return Promise.resolve(window.Chart)
   }
 
-  Chart.defaults.backgroundColor = BRAND_COLOR
-  Chart.defaults.borderColor = BRAND_COLOR
+  const chartConfig = getChartConfig()
+  const defaults = chartConfig.defaults || {}
+
+  // Only the simple scalar defaults are safe to set globally. The `colors`
+  // plugin options are intentionally NOT written to
+  // `Chart.defaults.plugins.colors`, because doing so can trigger a recursive
+  // defaults/fallback resolution inside Chart.js' options resolver and lead to
+  // a "RangeError: Maximum call stack size exceeded". Instead they are applied
+  // per chart via `withPackagePluginOptions()`.
+  Chart.defaults.backgroundColor = defaults.backgroundColor || DEFAULT_BACKGROUND_COLOR
+  Chart.defaults.borderColor = defaults.borderColor || DEFAULT_BORDER_COLOR
+  Chart.defaults.color = defaults.color || DEFAULT_FONT_COLOR
+
   Chart.register(Colors)
 
   // Expose globally for backward compatibility with views/host code that may
@@ -45,7 +102,51 @@ function prepareChart() {
   return Promise.resolve(Chart)
 }
 
-const LaravelMetrics = (window.LaravelMetrics = window.LaravelMetrics || {})
+/**
+ * Build the `colors` plugin options from the package configuration. These are
+ * meant to be passed per chart (inside `options.plugins.colors`) instead of
+ * being written to the global `Chart.defaults.plugins.colors`.
+ *
+ * @returns {{enabled: boolean, forceOverride: boolean}}
+ */
+function getColorsPluginOptions() {
+  const colorsPlugin = getChartConfig().colorsPlugin || {}
+
+  return {
+    enabled: colorsPlugin.enabled ?? true,
+    forceOverride: colorsPlugin.forceOverride ?? false,
+  }
+}
+
+/**
+ * Wrap a chart `options` object with the package-managed plugin options
+ * (currently the `colors` plugin). Existing per-chart plugin options take
+ * precedence over the package defaults.
+ *
+ * @param {object} [options]
+ * @returns {object}
+ */
+function withPackagePluginOptions(options = {}) {
+  const plugins = options.plugins || {}
+
+  return {
+    ...options,
+    plugins: {
+      ...plugins,
+      colors: {
+        ...getColorsPluginOptions(),
+        ...(plugins.colors || {}),
+      },
+    },
+  }
+}
+
+window.LaravelMetrics = window.LaravelMetrics || {}
+const Metrics = window.LaravelMetrics
+
+Metrics.getDatasetColors = getDatasetColors
+Metrics.getColorsPluginOptions = getColorsPluginOptions
+Metrics.withPackagePluginOptions = withPackagePluginOptions
 
 /**
  * Lazily resolve the Chart.js constructor. Subsequent calls reuse the same
@@ -53,12 +154,12 @@ const LaravelMetrics = (window.LaravelMetrics = window.LaravelMetrics || {})
  *
  * @returns {Promise<typeof Chart>}
  */
-LaravelMetrics.loadChart = function loadChart() {
-  if (!LaravelMetrics.chartReady) {
-    LaravelMetrics.chartReady = prepareChart()
+Metrics.loadChart = function loadChart() {
+  if (!Metrics.chartReady) {
+    Metrics.chartReady = prepareChart()
   }
 
-  return LaravelMetrics.chartReady
+  return Metrics.chartReady
 }
 
 /**
@@ -72,8 +173,15 @@ LaravelMetrics.loadChart = function loadChart() {
  * @param {boolean} config.doughnut
  */
 function metricPieChart(config) {
+  // The Chart.js instance is intentionally kept in a closure variable instead
+  // of on the Alpine component. Storing it as a reactive Alpine property turns
+  // the whole chart (its data/options object graph) into a reactive proxy,
+  // which makes Chart.js' options/data resolver recurse on legend clicks
+  // ("RangeError: Maximum call stack size exceeded" / "layout.configure: item
+  // undefined"). The closure keeps the instance fully non-reactive.
+  let chart = null
+
   return {
-    chart: null,
     labels: config.labels,
     values: config.values,
     colors: config.colors,
@@ -81,21 +189,37 @@ function metricPieChart(config) {
     doughnut: config.doughnut,
 
     async init() {
-      const Chart = await window.LaravelMetrics.loadChart()
+      const Chart = await Metrics.loadChart()
 
-      this.chart = new Chart(this.$refs.canvas.getContext('2d'), {
+      // Clone all reactive Alpine/Livewire proxy data into plain arrays before
+      // handing them to Chart.js to avoid recursive options/data resolution.
+      const labels = plainArray(this.labels)
+      const values = plainArray(this.values)
+
+      // Metric-specific colors (passed from PHP) always take precedence. Only
+      // when none are configured do we fall back to the package palette.
+      const configuredColors = plainArray(this.colors)
+      const fallbackColors = Metrics.getDatasetColors(values.length)
+      const colors = configuredColors.length ? configuredColors : fallbackColors
+
+      chart = new Chart(this.$refs.canvas.getContext('2d'), {
         type: 'pie',
         data: {
-          labels: this.labels.slice(),
+          labels,
           datasets: [
             {
-              data: this.values.slice(),
+              data: values,
+              backgroundColor: plainArray(colors),
+              borderColor: plainArray(colors),
             },
           ],
         },
-        options: {
+        options: withPackagePluginOptions({
           cutout: this.doughnut ? '50%' : 0,
           maintainAspectRatio: false,
+          animation: {
+            duration: 400,
+          },
           plugins: {
             legend: { display: false },
             tooltip: { enabled: false },
@@ -104,56 +228,68 @@ function metricPieChart(config) {
             x: { display: false },
             y: { display: false },
           },
-          elements: {
-            arc: {
-              backgroundColor: this.colors,
-            },
-          },
-        },
+        }),
       })
 
       this.$watch('values', () => this.updateChart())
-      this.$watch('invisible', (values) => this.checkInvisible(values))
+      this.$watch('invisible', (value) => {
+        // Defer to a microtask so we do not run Chart.js inside the Alpine
+        // reactive effect that triggered the watcher (which would otherwise
+        // re-enter the reactive proxy and recurse).
+        queueMicrotask(() => this.checkInvisible(value, true))
+      })
 
-      this.checkInvisible(this.invisible)
+      // Apply the initial visibility once the chart exists.
+      this.checkInvisible(this.invisible, false)
     },
 
     destroy() {
-      if (this.chart) {
-        this.chart.destroy()
-        this.chart = null
-      }
+      chart?.destroy()
+      chart = null
     },
 
     updateChart() {
-      if (!this.chart) {
+      if (!chart) {
         return
       }
 
-      this.chart.data.labels = this.labels.slice()
-      this.chart.data.datasets[0].data = this.values.slice()
-      this.chart.update()
+      const labels = plainArray(this.labels)
+      const values = plainArray(this.values)
+
+      const configuredColors = plainArray(this.colors)
+      const fallbackColors = Metrics.getDatasetColors(values.length)
+      const colors = configuredColors.length ? configuredColors : fallbackColors
+
+      chart.data.labels = labels
+      chart.data.datasets[0].data = values
+      chart.data.datasets[0].backgroundColor = plainArray(colors)
+      chart.data.datasets[0].borderColor = plainArray(colors)
+      chart.update()
     },
 
-    checkInvisible(invisible) {
-      if (!this.chart) {
+    checkInvisible(value, update = true) {
+      if (!chart) {
         return
       }
 
-      const dsMeta = this.chart.getDatasetMeta(0)
+      const invisible = plainArray(value)
 
-      dsMeta.data.forEach((arc, idx) => {
-        const shouldBeHidden = invisible.includes(idx)
-        const isCurrentlyVisible = this.chart.getDataVisibility(idx)
+      chart.data.datasets[0].data.forEach((_, index) => {
+        const shouldBeInvisible = invisible.includes(index)
+        const isVisible = chart.getDataVisibility(index)
 
-        if (shouldBeHidden && isCurrentlyVisible) {
-          this.chart.toggleDataVisibility(idx)
-        } else if (!shouldBeHidden && !isCurrentlyVisible) {
-          this.chart.toggleDataVisibility(idx)
+        if (shouldBeInvisible && isVisible) {
+          chart.toggleDataVisibility(index)
+        }
+
+        if (!shouldBeInvisible && !isVisible) {
+          chart.toggleDataVisibility(index)
         }
       })
 
-      this.chart.update()
+      if (update) {
+        chart.update()
+      }
     },
 
     toggle(key) {
@@ -181,25 +317,42 @@ function metricPieChart(config) {
  * @param {number[]} config.values
  */
 function metricTrendChart(config) {
+  // See `metricPieChart` for why the Chart.js instance is kept in a closure
+  // variable instead of a reactive Alpine property.
+  let chart = null
+
   return {
-    chart: null,
     labels: config.labels,
     values: config.values,
 
     async init() {
-      const Chart = await window.LaravelMetrics.loadChart()
+      const Chart = await Metrics.loadChart()
 
-      this.chart = new Chart(this.$refs.canvas.getContext('2d'), {
+      // Clone all reactive Alpine/Livewire proxy data into plain arrays before
+      // handing them to Chart.js to avoid recursive options/data resolution.
+      const labels = plainArray(this.labels)
+      const values = plainArray(this.values)
+
+      // Apply the package palette to the (single) trend dataset unless it
+      // already provides its own colors.
+      const color = Metrics.getDatasetColors(1)[0]
+      const dataset = { data: values }
+      if (color) {
+        dataset.borderColor = color
+        dataset.backgroundColor = color
+      }
+
+      chart = new Chart(this.$refs.canvas.getContext('2d'), {
         type: 'line',
         data: {
-          labels: this.labels,
-          datasets: [
-            {
-              data: this.values,
-            },
-          ],
+          labels,
+          datasets: [dataset],
         },
-        options: {
+        options: withPackagePluginOptions({
+          responsive: true,
+          animation: {
+            duration: 400,
+          },
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
@@ -208,33 +361,31 @@ function metricTrendChart(config) {
             x: { display: false },
             y: { display: false },
           },
-        },
+        }),
       })
 
       this.$watch('values', () => this.updateChart())
     },
 
     destroy() {
-      if (this.chart) {
-        this.chart.destroy()
-        this.chart = null
-      }
+      chart?.destroy()
+      chart = null
     },
 
     updateChart() {
-      if (!this.chart) {
+      if (!chart) {
         return
       }
 
-      this.chart.data.labels = this.labels
-      this.chart.data.datasets[0].data = this.values
-      this.chart.update()
+      chart.data.labels = plainArray(this.labels)
+      chart.data.datasets[0].data = plainArray(this.values)
+      chart.update()
     },
   }
 }
 
-LaravelMetrics.metricPieChart = metricPieChart
-LaravelMetrics.metricTrendChart = metricTrendChart
+Metrics.metricPieChart = metricPieChart
+Metrics.metricTrendChart = metricTrendChart
 
 /**
  * Register the Alpine components. The bundle is loaded as a classic script via
