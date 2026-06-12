@@ -11,104 +11,17 @@
         <div class="text-xs text-gray-600">{!! $this->total() !!}</div>
     </div>
 
+    @include('lacodix-metrics::metrics._assets')
+
     <div
         class="flex flex-col-reverse gap-4 @xs:flex-row justify-between items-center"
-        x-data="{
+        x-data="metricPieChart({
             labels: @entangle('labels').live,
             values: @entangle('values').live,
             colors: @entangle('colors').live,
             invisible: @entangle('invisibleValues').live,
-            init() {
-                const chart = new Chart(this.$refs.canvas.getContext('2d'), {
-                    type: 'pie',
-                    data: {
-                      labels: this.labels.slice(),
-                      datasets: [
-                        {
-                          data: this.values.slice(),
-                        },
-                      ],
-                    },
-                    options: {
-                      cutout: {{ $doughnut ? '"50%"': '0' }},
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: false,
-                        },
-                        tooltip: {
-                          enabled: false,
-                        }
-                      },
-                      scales: {
-                        x: {
-                          display: false,
-                        },
-                        y: {
-                          display: false,
-                        }
-                      },
-                      elements: {
-                        arc: {
-                            backgroundColor: this.colors,
-                        }
-                      }
-                    }
-                  })
-
-                  this.$watch('values', () => {
-                    chart.data.labels = this.labels.slice()
-                    chart.data.datasets[0].data = this.values.slice()
-
-                    chart.update()
-                  })
-
-                  function checkInvisible(invisible) {
-                    // for a single‐dataset pie, datasetIndex is always 0
-                    const dsMeta = chart.getDatasetMeta(0);
-
-                    dsMeta.data.forEach((arc, idx) => {
-                        const shouldBeHidden  = invisible.includes(idx);
-                        const isCurrentlyVisible = chart.getDataVisibility(idx);
-
-                        // if its desired hidden‐state differs from current, toggle it
-                        if (shouldBeHidden && isCurrentlyVisible) {
-                            chart.toggleDataVisibility(idx);
-                        }
-                        else if (!shouldBeHidden && !isCurrentlyVisible) {
-                            chart.toggleDataVisibility(idx);
-                        }
-                    })
-
-                    chart.update()
-                  }
-
-                  this.$watch('invisible', (values) => {
-                    checkInvisible(values);
-                  })
-
-                  checkInvisible(this.invisible);
-               },
-
-               toggle(key) {
-                    const arr = this.invisible
-
-                    const idx = arr.indexOf(key)
-                    if (idx !== -1) {
-                        // key is already “invisible” → remove it
-                        arr.splice(idx, 1)
-                    } else {
-                        // key wasn’t invisible → add it
-                        arr.push(key)
-                    }
-               },
-
-               isInvisible(key) {
-                    const arr = this.invisible
-
-                    return arr.indexOf(key) !== -1
-               },
-        }"
+            doughnut: {{ $doughnut ? 'true' : 'false' }},
+        })"
     >
         <ul>
             @foreach($values as $key => $value)
