@@ -393,18 +393,24 @@ Metrics.metricTrendChart = metricTrendChart
  * module based) host bundle calls `Alpine.start()`. Therefore listening to
  * `alpine:init` is the reliable registration point. As a safety net we also
  * register immediately if Alpine is already available.
+ *
+ * For Livewire SPA navigation (`wire:navigate`): Alpine persists across
+ * navigations and does not re-fire `alpine:init`. We listen to
+ * `livewire:navigating` (fires before Alpine re-initialises the new page) so
+ * components are always registered in time. `Alpine.data()` is idempotent, so
+ * calling it multiple times is safe.
  */
 function registerComponents(Alpine) {
-  if (!Alpine || Alpine.__laravelMetricsRegistered) {
+  if (!Alpine) {
     return
   }
 
-  Alpine.__laravelMetricsRegistered = true
   Alpine.data('metricPieChart', metricPieChart)
   Alpine.data('metricTrendChart', metricTrendChart)
 }
 
 document.addEventListener('alpine:init', () => registerComponents(window.Alpine))
+document.addEventListener('livewire:navigating', () => registerComponents(window.Alpine))
 
 if (window.Alpine) {
   registerComponents(window.Alpine)
