@@ -388,6 +388,32 @@ Metrics.metricPieChart = metricPieChart
 Metrics.metricTrendChart = metricTrendChart
 
 /**
+ * Re-initialize metric elements that Alpine processed before this bundle was
+ * loaded. When navigating via `wire:navigate` to a page that contains metric
+ * components for the first time, Livewire may call Alpine's initTree before the
+ * external metrics.js script finishes downloading. Alpine sets `_x_marker` on
+ * each element it visits but only sets `_x_dataStack` when the x-data
+ * expression succeeds. Elements with a marker but no data stack failed because
+ * the component was not registered yet and need a second pass.
+ */
+function reinitMetricElements() {
+  if (!window.Alpine) {
+    return
+  }
+
+  document.querySelectorAll('[x-data^="metricPieChart"], [x-data^="metricTrendChart"]').forEach(el => {
+    if (!el._x_marker || el._x_dataStack) {
+      return
+    }
+
+    el.querySelectorAll('*').forEach(child => delete child._x_marker)
+    delete el._x_marker
+
+    window.Alpine.initTree(el)
+  })
+}
+
+/**
  * Register the Alpine components. The bundle is loaded as a classic script via
  * an `@once` directive inside the package views, i.e. before the (deferred,
  * module based) host bundle calls `Alpine.start()`. Therefore listening to
@@ -396,9 +422,11 @@ Metrics.metricTrendChart = metricTrendChart
  *
  * For Livewire SPA navigation (`wire:navigate`): Alpine persists across
  * navigations and does not re-fire `alpine:init`. We listen to
- * `livewire:navigating` (fires before Alpine re-initialises the new page) so
- * components are always registered in time. `Alpine.data()` is idempotent, so
- * calling it multiple times is safe.
+ * `livewire:navigating` (fires before Alpine re-initialises the new page) to
+ * cover the case where this bundle was already loaded on a previous page.
+ * For the first-ever visit to a metrics page via navigate this bundle loads
+ * after Alpine has already run; `reinitMetricElements` recovers those elements.
+ * `Alpine.data()` is idempotent, so calling it multiple times is safe.
  */
 function registerComponents(Alpine) {
   if (!Alpine) {
@@ -407,6 +435,7 @@ function registerComponents(Alpine) {
 
   Alpine.data('metricPieChart', metricPieChart)
   Alpine.data('metricTrendChart', metricTrendChart)
+  reinitMetricElements()
 }
 
 document.addEventListener('alpine:init', () => registerComponents(window.Alpine))

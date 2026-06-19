@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lacodix\LaravelMetricCards;
 
 //use Lacodix\LaravelMetricCards\Commands\MakeMetricCommand;
+use Illuminate\Support\Facades\Blade;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -39,6 +40,21 @@ class LaravelMetricCardsServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../dist' => public_path('vendor/laravel-metrics'),
         ], 'laravel-metrics-assets');
+
+        // @metricsScripts renders the config block and the metrics bundle inline,
+        // exactly where the directive is placed. Put it in <head> for guaranteed
+        // synchronous loading before Alpine initialises (recommended), or anywhere
+        // else — the JS recovery in metrics.js handles late loading automatically.
+        // Shares the same once-key as the _assets.blade.php fallback so only one
+        // of the two ever renders per request.
+        Blade::directive('metricsScripts', function () {
+            return <<<'PHP'
+            <?php if (! $__env->hasRenderedOnce('laravel-metric-cards::scripts')): ?>
+            <?php $__env->markAsRenderedOnce('laravel-metric-cards::scripts'); ?>
+            <?php echo view('lacodix-metrics::metrics._scripts')->render(); ?>
+            <?php endif; ?>
+            PHP;
+        });
     }
 
     /**
