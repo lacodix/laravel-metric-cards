@@ -232,6 +232,11 @@ function metricPieChart(config) {
       })
 
       this.$watch('values', () => this.updateChart())
+      // Colors can change without the values changing at all - a Livewire
+      // action may swap the palette or the derivation strategy. Watching only
+      // `values` left the canvas on its old colors while the server-rendered
+      // legend already showed the new ones.
+      this.$watch('colors', () => this.updateChart())
       this.$watch('invisible', (value) => {
         // Defer to a microtask so we do not run Chart.js inside the Alpine
         // reactive effect that triggered the watcher (which would otherwise

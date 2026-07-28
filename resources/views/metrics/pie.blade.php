@@ -18,7 +18,10 @@
         x-data="metricPieChart({
             labels: @entangle('labels').live,
             values: @entangle('values').live,
-            colors: @entangle('colors').live,
+            {{-- Resolved per value, so the chart cannot run out of colors. The
+                 component keeps its `colors` key: an empty list still lets the
+                 bundle fall back to the package palette. --}}
+            colors: @entangle('segmentColors').live,
             invisible: @entangle('invisibleValues').live,
             doughnut: {{ $doughnut ? 'true' : 'false' }},
         })"
@@ -30,7 +33,7 @@
                     :class="{'line-through': isInvisible({{ $key }})}"
                     @click="toggle({{ $key }})"
                 >
-                    <span class="inline-block rounded-full w-2 h-2 mr-2" style="background-color: {{ $colors[$key] }}"></span>
+                    <span class="inline-block rounded-full w-2 h-2 mr-2" style="background-color: {{ $segmentColors[$key] ?? 'transparent' }}"></span>
                     {!! $labels[$key] ?? '' !!}
                 </li>
             @endforeach
