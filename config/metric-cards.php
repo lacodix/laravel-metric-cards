@@ -15,6 +15,13 @@ return [
             'font_color' => '#666',
         ],
 
+        // How a chart colors segments once the palette below is exhausted -
+        // the number of pie segments usually comes from data, not from code.
+        // 'hue'       rotate the hue per palette run (most distinct, default)
+        // 'lightness' keep the hue, vary the brightness (stays on palette)
+        // 'repeat'    cycle the palette unchanged (colors repeat)
+        'color_derivation' => 'hue',
+
         // Package palette used for pie segments and multiple trend datasets.
         'dataset_colors' => [
             '#6c5cff',

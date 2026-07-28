@@ -55,6 +55,10 @@ Host applications can control the Chart.js colors entirely through
         'font_color' => '#111827',
     ],
 
+    // How colors are derived once the palette is exhausted:
+    // 'hue' (default), 'lightness' or 'repeat'.
+    'color_derivation' => 'hue',
+
     // Package palette used for pie segments and multiple trend datasets.
     'dataset_colors' => [
         '#6c5cff',
@@ -74,8 +78,32 @@ Host applications can control the Chart.js colors entirely through
 - `defaults` — the global Chart.js fallback colors (`Chart.defaults.backgroundColor`,
   `Chart.defaults.borderColor`, `Chart.defaults.color`).
 - `dataset_colors` — the package palette used for pie segments and for multiple
-  trend datasets. Metric-specific colors (e.g. the `$colors` array on a `Pie`
-  metric) always take precedence; the palette is only used as a fallback.
+  trend datasets. A metric may override it for its own card by filling the
+  `$colors` array on the `Pie` metric; left empty (the default) it follows this
+  palette.
+- `color_derivation` — how a chart colors segments once the palette is
+  exhausted. The number of pie segments usually comes from data, so a palette
+  can always be too short. The palette itself is never touched: the first
+  segments of a chart are the palette in its configured order, derivation only
+  starts afterwards.
+  - `hue` (default) rotates the hue by the golden angle per palette run — the
+    widest separation, at the price of leaving the color family. Greys, black
+    and white have no hue to rotate, so those are varied by brightness instead.
+  - `lightness` keeps the hue and varies the brightness — stays inside the
+    color family, distinguishes less clearly, and because brightness is bounded
+    a heavily recycled palette eventually repeats.
+  - `repeat` cycles the palette unchanged.
+
+  A single metric can deviate by setting `protected ?ColorDerivation $colorDerivation`.
+
+  **Derivation only understands hex colors** (`#rgb`, `#rgba`, `#rrggbb`,
+  `#rrggbbaa`; transparency is preserved). A palette of `rgb()`, `hsl()` or CSS
+  variables is cycled unchanged — those colors repeat once the palette is
+  exhausted. Use hex values in the palette if a chart may have more segments
+  than the palette has colors.
+
+  An empty palette falls back to the package's built-in one, so legend and
+  canvas always agree on a color.
 - `colors_plugin` — configuration for the Chart.js `Colors` plugin. With
   `force_override = false` (default) the plugin does not overwrite colors that
   the package already set on a dataset.
@@ -84,3 +112,15 @@ These settings are passed from PHP to JavaScript via `window.LaravelMetrics.conf
 in the package's `_assets.blade.php` view. The Laravel config is the primary
 override source; any `window.LaravelMetrics.config` set manually before the
 bundle loads only complements it.
+
+### Upgrading pie metrics
+
+Two breaking changes come with the per-segment color resolution:
+
+- The pie view renders `$segmentColors` instead of `$colors`. **A published or
+  overridden copy of the old view has to be re-published**, otherwise it reads
+  `$colors`, which is now the (possibly empty) palette rather than one color
+  per segment.
+- `Pie::$colors` no longer carries hard-coded colors, so pie charts follow
+  `dataset_colors` like every other chart. A metric that wants its own palette
+  still declares `public array $colors = [...]`.
