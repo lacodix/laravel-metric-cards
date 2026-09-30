@@ -241,6 +241,28 @@ test('trend uses the keys of consumer options including a nondefault selection',
         ->and($component->effects['returns'][0])->toHaveCount(3);
 });
 
+test('trend keeps period zero for empty options on mount and normalization', function () {
+    $metric = new class extends Trend
+    {
+        public function options(): array
+        {
+            return [];
+        }
+
+        public function value(): array
+        {
+            return [$this->period];
+        }
+    };
+
+    $metric->mount();
+    expect($metric->period)->toBe(0);
+
+    $metric->period = 731;
+    $metric->hydrateNormalizesTrendPeriod();
+    expect($metric->period)->toBe(0);
+});
+
 test('trend query boundary normalizes an invalid period set in mount', function () {
     $component = Livewire::test(new class extends PostsPerDay
     {

@@ -47,14 +47,12 @@ class LaravelMetricCardsServiceProvider extends PackageServiceProvider
         // else — the JS recovery in metrics.js handles late loading automatically.
         // Shares the same once-key as the _assets.blade.php fallback so only one
         // of the two ever renders per request.
-        Blade::directive('metricsScripts', function () {
-            return <<<'PHP'
+        Blade::directive('metricsScripts', fn () => <<<'PHP'
             <?php if (! $__env->hasRenderedOnce('laravel-metric-cards::scripts')): ?>
             <?php $__env->markAsRenderedOnce('laravel-metric-cards::scripts'); ?>
             <?php echo view('lacodix-metrics::metrics._scripts')->render(); ?>
             <?php endif; ?>
-            PHP;
-        });
+            PHP);
     }
 
     /**

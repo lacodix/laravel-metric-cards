@@ -34,7 +34,7 @@ abstract class Value extends Metric
 
     public function mount(): void
     {
-        $this->period = current(array_keys($this->options()));
+        $this->period = array_key_first($this->options()) ?? 0;
     }
 
     public function render(): View

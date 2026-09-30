@@ -187,7 +187,7 @@ abstract class Trend extends Metric
 
     public function mount(): void
     {
-        $this->period = current(array_keys($this->options()));
+        $this->period = array_key_first($this->options()) ?? 0;
     }
 
     private function normalizePeriod(): void
@@ -195,7 +195,7 @@ abstract class Trend extends Metric
         $options = $this->options();
 
         if (! isset($this->period) || ! array_key_exists($this->period, $options)) {
-            $this->period = current(array_keys($options));
+            $this->period = array_key_first($options) ?? 0;
         }
     }
 
