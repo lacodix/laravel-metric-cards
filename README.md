@@ -41,6 +41,13 @@ php artisan vendor:publish --tag=laravel-metric-cards-config
 
 This creates `config/metric-cards.php`.
 
+## Trend metrics
+
+Call aggregation helpers such as `countByDays()` or `maxByMonths()` from a
+Trend subclass's PHP `value()` method. These helpers are protected, so the
+metric defines its model, query, and columns. The dashboard period selector
+updates the public `period` property.
+
 ## Chart colors
 
 Host applications can control the Chart.js colors entirely through
