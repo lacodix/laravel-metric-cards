@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Lacodix\LaravelMetricCards\Enums\TrendUnit;
+use Lacodix\LaravelMetricCards\Traits\NormalizesTrendPeriod;
 
 abstract class Trend extends Metric
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lacodix\LaravelMetricCards\Metrics;
+namespace Lacodix\LaravelMetricCards\Traits;
 
 trait NormalizesTrendPeriod
 {
