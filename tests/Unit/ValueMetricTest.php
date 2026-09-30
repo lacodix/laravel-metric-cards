@@ -49,3 +49,21 @@ test('value metric shows correct values', function () {
         ->and($component->get('currentValue'))->toEqual(40)
         ->and($component->get('changePercentage'))->toEqual(100);
 });
+
+test('value keeps period zero for empty options on mount', function () {
+    $metric = new class extends \Lacodix\LaravelMetricCards\Metrics\Value
+    {
+        public function options(): array
+        {
+            return [];
+        }
+
+        public function value(): array
+        {
+            return [];
+        }
+    };
+
+    $metric->mount();
+    expect($metric->period)->toBe(0);
+});
