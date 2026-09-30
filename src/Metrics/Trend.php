@@ -6,44 +6,14 @@ use BadMethodCallException;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Lacodix\LaravelMetricCards\Enums\TrendUnit;
+use Lacodix\LaravelMetricCards\Traits\NormalizesTrendPeriod;
 
-/**
- * @method array countByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array countByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array countByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array countByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array countByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array countByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array sumByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array sumByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array sumByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array sumByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array sumByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array sumByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array minByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array minByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array minByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array minByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array minByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array minByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array maxByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array maxByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array maxByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array maxByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array maxByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array maxByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array avgByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array avgByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array avgByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array avgByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array avgByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- * @method array avgByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null)
- */
 abstract class Trend extends Metric
 {
+    use NormalizesTrendPeriod;
+
     public int $previousValue;
     /** @var array<int> $values */
     public array $values;
@@ -52,24 +22,154 @@ abstract class Trend extends Metric
     public int $period;
     protected string $component = 'trend';
 
-    public function __call($method, $params): mixed
+    protected function countByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
     {
-        if (! Str::contains($method, 'By')) {
-            return null;
-        }
+        return $this->run('count', TrendUnit::MINUTE, $model, $column, $dateColumn);
+    }
 
-        [$function, $unit] = explode('By', (string) $method);
+    protected function countByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('count', TrendUnit::HOUR, $model, $column, $dateColumn);
+    }
 
-        if (! in_array(strtolower($function), ['count', 'sum', 'min', 'max', 'avg'])
-            || ! in_array(strtolower($unit), ['days', 'weeks', 'months', 'quarters', 'hours', 'minutes'])) {
-            return null;
-        }
+    protected function countByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('count', TrendUnit::DAY, $model, $column, $dateColumn);
+    }
 
-        return $this->run(
-            strtolower($function),
-            TrendUnit::from(Str::singular(strtolower($unit))),
-            ...$params
-        );
+    protected function countByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('count', TrendUnit::WEEK, $model, $column, $dateColumn);
+    }
+
+    protected function countByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('count', TrendUnit::MONTH, $model, $column, $dateColumn);
+    }
+
+    protected function countByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('count', TrendUnit::QUARTER, $model, $column, $dateColumn);
+    }
+
+    protected function sumByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', TrendUnit::MINUTE, $model, $column, $dateColumn);
+    }
+
+    protected function sumByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', TrendUnit::HOUR, $model, $column, $dateColumn);
+    }
+
+    protected function sumByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', TrendUnit::DAY, $model, $column, $dateColumn);
+    }
+
+    protected function sumByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', TrendUnit::WEEK, $model, $column, $dateColumn);
+    }
+
+    protected function sumByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', TrendUnit::MONTH, $model, $column, $dateColumn);
+    }
+
+    protected function sumByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('sum', TrendUnit::QUARTER, $model, $column, $dateColumn);
+    }
+
+    protected function minByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', TrendUnit::MINUTE, $model, $column, $dateColumn);
+    }
+
+    protected function minByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', TrendUnit::HOUR, $model, $column, $dateColumn);
+    }
+
+    protected function minByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', TrendUnit::DAY, $model, $column, $dateColumn);
+    }
+
+    protected function minByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', TrendUnit::WEEK, $model, $column, $dateColumn);
+    }
+
+    protected function minByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', TrendUnit::MONTH, $model, $column, $dateColumn);
+    }
+
+    protected function minByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('min', TrendUnit::QUARTER, $model, $column, $dateColumn);
+    }
+
+    protected function maxByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', TrendUnit::MINUTE, $model, $column, $dateColumn);
+    }
+
+    protected function maxByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', TrendUnit::HOUR, $model, $column, $dateColumn);
+    }
+
+    protected function maxByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', TrendUnit::DAY, $model, $column, $dateColumn);
+    }
+
+    protected function maxByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', TrendUnit::WEEK, $model, $column, $dateColumn);
+    }
+
+    protected function maxByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', TrendUnit::MONTH, $model, $column, $dateColumn);
+    }
+
+    protected function maxByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('max', TrendUnit::QUARTER, $model, $column, $dateColumn);
+    }
+
+    protected function avgByMinutes(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', TrendUnit::MINUTE, $model, $column, $dateColumn);
+    }
+
+    protected function avgByHours(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', TrendUnit::HOUR, $model, $column, $dateColumn);
+    }
+
+    protected function avgByDays(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', TrendUnit::DAY, $model, $column, $dateColumn);
+    }
+
+    protected function avgByWeeks(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', TrendUnit::WEEK, $model, $column, $dateColumn);
+    }
+
+    protected function avgByMonths(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', TrendUnit::MONTH, $model, $column, $dateColumn);
+    }
+
+    protected function avgByQuarters(string|Builder $model, ?string $column = null, ?string $dateColumn = null): array
+    {
+        return $this->run('avg', TrendUnit::QUARTER, $model, $column, $dateColumn);
     }
 
     /** @return array<int|float> */
@@ -90,6 +190,15 @@ abstract class Trend extends Metric
         $this->period = current(array_keys($this->options()));
     }
 
+    private function normalizePeriod(): void
+    {
+        $options = $this->options();
+
+        if (! isset($this->period) || ! array_key_exists($this->period, $options)) {
+            $this->period = current(array_keys($options));
+        }
+    }
+
     public function render(): View
     {
         $this->calculate();
@@ -104,6 +213,8 @@ abstract class Trend extends Metric
         ?string $column = null,
         ?string $dateColumn = null
     ): array {
+        $this->normalizePeriod();
+
         $query = $model instanceof Builder ? $model : (new $model())->newQuery();
         $column ??= $query->getModel()->getQualifiedKeyName();
         $dateColumn ??= $query->getModel()->getCreatedAtColumn();
